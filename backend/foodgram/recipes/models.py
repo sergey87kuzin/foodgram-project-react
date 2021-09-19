@@ -2,7 +2,6 @@ from colorfield.fields import ColorField
 from django.db import models
 
 from users.models import User
-
 from .validators import validator_amount, validator_time
 
 
@@ -12,6 +11,8 @@ class Ingredient(models.Model):
 
     class Meta:
         ordering = ('name',)
+        verbose_name = 'ингредиент'
+        verbose_name_plural = 'ингредиенты'
 
     def __str__(self):
         return self.name
@@ -56,28 +57,25 @@ class Recipe(models.Model):
 
     class Meta:
         ordering = ('-id',)
+        verbose_name = 'рецепт'
+        verbose_name_plural = 'рецепты'
 
     def __str__(self):
         return self.name
 
-    def ingredient_set(self):
-        return Amount.objects.filter(recipe__id=self.id)
-
-    def get_author(self):
-        return self.author
-
     def get_ingredients(self):
-        amounts = Amount.objects.select_related(
-            'ingredient').filter(recipe__id=self.id)
-        return ', '.join(
-            [amount.ingredient.name + str(amount.amount) +
-             amount.ingredient.measurement_unit
-             for amount in amounts]
-        )
+        results = []
+        amounts = list(Amount.objects.filter(
+            recipe__id=self.id).values_list(
+                'ingredient__name', 'amount', 'ingredient__measurement_unit'))
+        for amount in amounts:
+            results.append(f'{amount[0]} {amount[1]} {amount[2]}')
+        return ', '.join(results)
 
     def get_tags(self):
-        tags = Tag.objects.filter(recipes__id=self.id)
-        return ', '.join(str(tag.name) for tag in tags)
+        tags = list(Tag.objects.filter(
+            recipes__id=self.id).values_list('name', flat=True))
+        return ', '.join(tags)
 
 
 class Tag(models.Model):
@@ -91,6 +89,8 @@ class Tag(models.Model):
 
     class Meta:
         ordering = ('name',)
+        verbose_name = 'тэг'
+        verbose_name_plural = 'тэги'
 
     def __str__(self):
         return self.name
@@ -106,6 +106,14 @@ class Favorite(models.Model):
 
     class Meta:
         ordering = ('recipe__name',)
+        verbose_name = 'избранное'
+        verbose_name_plural = 'избранные'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='uniq_favorite',
+            )
+        ]
 
     def __str__(self):
         return (
@@ -123,6 +131,14 @@ class ShoppingCart(models.Model):
 
     class Meta:
         ordering = ('recipe__name',)
+        verbose_name = 'список'
+        verbose_name_plural = 'списки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='uniq_cart',
+            )
+        ]
 
     def __str__(self):
         return (
@@ -138,14 +154,19 @@ class Subscription(models.Model):
         User, on_delete=models.CASCADE, related_name='followings'
     )
 
+    class Meta:
+        verbose_name = 'подписка'
+        verbose_name_plural = 'подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='uniq_subscribe',
+            )
+        ]
+
     def __str__(self):
         return (
             f'{self.user.username} подписан на {self.author.username}'
-        )
-
-    def subscribe_set(self):
-        return Recipe.objects.filter(
-            author=self.author
         )
 
 
@@ -162,11 +183,15 @@ class Amount(models.Model):
         validators=[validator_amount]
     )
 
+    class Meta:
+        verbose_name = 'количество'
+        verbose_name_plural = 'количества'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='uniq_amount',
+            )
+        ]
+
     def __str__(self):
         return str(self.amount)
-
-    def recipe_name(self):
-        return self.recipe.name
-
-    def recipe_unit(self):
-        return self.recipe.measurement_unit

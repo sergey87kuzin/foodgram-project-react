@@ -11,7 +11,6 @@ from rest_framework.serializers import ValidationError
 from recipes.models import Subscription
 from recipes.serializers import SubscribeSerializer, SubscriptionSerializer
 from recipes.validators import validate_subscribe
-
 from .models import User
 from .serializers import UserSerializer
 
@@ -37,12 +36,15 @@ class UserViewSet(mixins.CreateModelMixin,
             permission_classes=[IsAuthenticated])
     def set_password(self, request):
         instance = request.user
-        new_password = request.data['new_password']
-        data = {'password': new_password}
-        serializer = UserSerializer(instance, data=data, partial=True)
-        if serializer.is_valid():
+        current_password = request.data['current_password']
+        if current_password == instance.password:
+            new_password = request.data['new_password']
+            data = {'password': new_password}
+            serializer = UserSerializer(instance, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
             serializer.save()
-        return Response(serializer.data)
+            return Response(serializer.data)
+        return Response(status=HTTPStatus.BAD_REQUEST)
 
     @action(detail=False, methods=['get'],
             permission_classes=[IsAuthenticated])
@@ -66,7 +68,8 @@ def subscription_view(request, user_id):
             validate_subscribe(user, author)
         except ValidationError:
             return Response(
-                'Cant subscribe your account', status=HTTPStatus.BAD_REQUEST
+                'вы не можете подписаться на себя',
+                status=HTTPStatus.BAD_REQUEST
             )
         data = {'user': user.id, 'author': author.id, 'request': request}
         serializer = SubscriptionSerializer(data=data)
@@ -80,5 +83,5 @@ def subscription_view(request, user_id):
             return Response(status=HTTPStatus.NO_CONTENT)
         except Exception:
             return Response(
-                'You are not subscribed', status=HTTPStatus.BAD_REQUEST
+                'вы не подписаны', status=HTTPStatus.BAD_REQUEST
             )

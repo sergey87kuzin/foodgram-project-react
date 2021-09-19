@@ -1,5 +1,8 @@
 version: '3.3'
 
+volumes:
+  postgres_data:
+
 services:
 
   frontend:
@@ -8,6 +11,22 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
+  db:
+    image: postgres:12.4
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ../backend/foodgram/.env
+  web:
+    build:
+      context: ../backend/foodgram
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - db
+      - frontend
+    env_file:
+      - ../backend/foodgram/.env
   nginx:
     image: nginx:1.19.3
     ports:
@@ -17,3 +36,5 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
       - ../docs/openapi-schema.yml:/usr/share/nginx/html/api/docs/openapi-schema.yml
+    depends_on:
+      - web
