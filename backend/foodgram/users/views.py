@@ -12,7 +12,7 @@ from recipes.models import Subscription
 from recipes.serializers import SubscribeSerializer, SubscriptionSerializer
 from recipes.validators import validate_subscribe
 from .models import User
-from .serializers import UserSerializer
+from .serializers import ChangePasswordSerializer, UserSerializer
 
 
 class UserViewSet(mixins.CreateModelMixin,
@@ -36,15 +36,24 @@ class UserViewSet(mixins.CreateModelMixin,
             permission_classes=[IsAuthenticated])
     def set_password(self, request):
         instance = request.user
-        current_password = request.data['current_password']
-        if current_password == instance.password:
-            new_password = request.data['new_password']
-            data = {'password': new_password}
-            serializer = UserSerializer(instance, data=data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
-        return Response(status=HTTPStatus.BAD_REQUEST)
+        current = request.data['current_password']
+        context = {'request': request}
+        serializer = ChangePasswordSerializer(instance, context=context)
+        try:
+            serializer.validate_current_password(request, current)
+        except ValidationError:
+            return Response('неверный пароль')
+        new_password = request.data['new_password']
+        data = {'password': new_password}
+        serializer = ChangePasswordSerializer(
+            instance, data=data, partial=True, context=context)
+        try:
+            serializer.validate_new_password(request, new_password)
+        except ValidationError:
+            return Response('новый пароль некорректен')
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(HTTPStatus.OK)
 
     @action(detail=False, methods=['get'],
             permission_classes=[IsAuthenticated])

@@ -135,3 +135,4 @@ backend/foodgram/static/
 backend/foodgram/sqlite3
 backend/foodgram/ingredients.csv
 backend/foodgram/.vscode/
+backend/foodgram/.env

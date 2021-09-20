@@ -6,8 +6,14 @@ from .validators import validator_amount, validator_time
 
 
 class Ingredient(models.Model):
-    name = models.CharField(max_length=200)
-    measurement_unit = models.CharField(max_length=200)
+    name = models.CharField(
+        max_length=200,
+        verbose_name='название'
+    )
+    measurement_unit = models.CharField(
+        max_length=200,
+        verbose_name='мера'
+    )
 
     class Meta:
         ordering = ('name',)
@@ -33,7 +39,8 @@ class Recipe(models.Model):
     image = models.ImageField(
         upload_to='posts/',
         blank=True,
-        null=True
+        null=True,
+        verbose_name='картинка'
     )
     ingredients = models.ManyToManyField(
         'Ingredient',
@@ -47,8 +54,11 @@ class Recipe(models.Model):
         verbose_name='теги',
         related_name='recipes'
     )
-    text = models.TextField()
-    cooking_time = models.IntegerField(validators=[validator_time])
+    text = models.TextField(verbose_name='текст рецепта')
+    cooking_time = models.IntegerField(
+        verbose_name='время приготовления',
+        validators=[validator_time]
+    )
 
     REQUIRED_FIELDS = [
         'author', 'name', 'image', 'ingredients',
@@ -79,11 +89,14 @@ class Recipe(models.Model):
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(
+        verbose_name='название',
+        max_length=200
+    )
     slug = models.SlugField(
         max_length=200,
         unique=True,
-        verbose_name='Slug'
+        verbose_name='слаг'
     )
     colour = ColorField(default='#FF0000')
 
@@ -98,10 +111,12 @@ class Tag(models.Model):
 
 class Favorite(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='favorites'
+        User, on_delete=models.CASCADE,
+        related_name='favorites', verbose_name='пользователь'
     )
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name='favorites'
+        Recipe, on_delete=models.CASCADE,
+        related_name='favorites', verbose_name='рецепт'
     )
 
     class Meta:
@@ -123,10 +138,12 @@ class Favorite(models.Model):
 
 class ShoppingCart(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='carts'
+        User, on_delete=models.CASCADE,
+        related_name='carts', verbose_name='пользователь'
     )
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name='carts'
+        Recipe, on_delete=models.CASCADE,
+        related_name='carts', verbose_name='рецепт'
     )
 
     class Meta:
@@ -148,10 +165,12 @@ class ShoppingCart(models.Model):
 
 class Subscription(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='followers'
+        User, on_delete=models.CASCADE,
+        related_name='followers', verbose_name='пользователь'
     )
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='followings'
+        User, on_delete=models.CASCADE,
+        related_name='followings', verbose_name='автор'
     )
 
     class Meta:
@@ -172,10 +191,12 @@ class Subscription(models.Model):
 
 class Amount(models.Model):
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name='quantities'
+        Recipe, on_delete=models.CASCADE,
+        related_name='quantities', verbose_name='рецепт'
     )
     ingredient = models.ForeignKey(
-        Ingredient, on_delete=models.CASCADE, related_name='quantities'
+        Ingredient, on_delete=models.CASCADE,
+        related_name='quantities', verbose_name='ингредиент'
     )
     amount = models.FloatField(
         verbose_name='количество',
