@@ -1,3 +1,5 @@
+import base64
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -52,13 +54,26 @@ class AmountSerializer(serializers.ModelSerializer):
         ), ]
 
 
+class MyImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        format, imgstr = data.split(';base64,')
+        ext = format.split('/')[-1]
+        data = ContentFile(
+            base64.b64decode(imgstr),
+            name='file_name.' + ext
+        )
+        django_field = self._DjangoImageField()
+        django_field.error_messages = self.error_messages
+        return django_field.clean(data)
+
+
 class BaseRecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(many=False, read_only=True)
     tags = SlugRelatedField(
         slug_field='id', many=True, queryset=Tag.objects.all()
     )
-    image = serializers.ImageField(
-        max_length=None, use_url=False, allow_null=True, required=False
+    image = MyImageField(
+        max_length=None, use_url=True, allow_null=True, required=False
     )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -96,7 +111,7 @@ class RecipeSerializer(BaseRecipeSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'author', 'name', 'image', 'tags', 'ingredients',
+            'id', 'author', 'name', 'image', 'tags', 'ingredients',
             'is_favorited', 'is_in_shopping_cart', 'text',
             'cooking_time'
         )
@@ -106,8 +121,34 @@ class RecipeSerializer(BaseRecipeSerializer):
         serializer = AmountSerializer(instance, many=True, read_only=True)
         return serializer.data
 
-    def update(self, instance, validated_data):
+
+class RecipeCreateSerializer(BaseRecipeSerializer):
+    ingredients = AmountCreateSerializer(
+        many=True, required=True
+    )
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'author', 'name', 'image', 'tags', 'ingredients',
+            'is_favorited', 'is_in_shopping_cart', 'text',
+            'cooking_time'
+        )
+
+    def create(self, validated_data):
         tags = validated_data.pop('tags')
+        ingredients = self.context['request'].data['ingredients']
+        validated_data.pop('ingredients')
+        instance = Recipe.objects.create(
+            author=self.context['request'].user, **validated_data
+        )
+        instance.tags.set(tags)
+        for ingr in ingredients:
+            RecipeCreateSerializer.create_amount(instance, ingr)
+        return instance
+
+    def update(self, instance, validated_data):
+        tags = self.context['request'].data['tags']
         instance.tags.set(tags)
         new_name = validated_data.get('name')
         instance.name = new_name
@@ -125,32 +166,6 @@ class RecipeSerializer(BaseRecipeSerializer):
         return instance
 
 
-class RecipeCreateSerializer(BaseRecipeSerializer):
-    ingredients = AmountCreateSerializer(
-        many=True, required=True
-    )
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'author', 'name', 'image', 'tags', 'ingredients',
-            'is_favorited', 'is_in_shopping_cart', 'text',
-            'cooking_time'
-        )
-
-    def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = self.context['request'].data['ingredients']
-        validated_data.pop('ingredients')
-        instance = Recipe.objects.create(
-            author=self.context['request'].user, **validated_data
-        )
-        instance.tags.set(tags)
-        for ingr in ingredients:
-            RecipeCreateSerializer.create_amount(instance, ingr)
-        return instance
-
-
 class FavoriteSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(
         slug_field='id',
@@ -162,7 +177,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        exclude = ('id',)
+        fields = '__all__'
         model = Favorite
         lookup_field = 'id'
         validators = [UniqueTogetherValidator(
@@ -173,7 +188,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('name', 'image', 'text', 'cooking_time')
+        fields = ('id', 'name', 'image', 'cooking_time')
         model = Recipe
 
 
@@ -187,10 +202,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         queryset=User.objects.all(), slug_field='id',
     )
     recipes = serializers.SerializerMethodField()
-    username = serializers.CharField(source='author.username')
 
     class Meta:
-        fields = ('recipes', 'user', 'author', 'username')
+        fields = ('recipes', 'user', 'author')
         model = Subscription
         validators = [UniqueTogetherValidator(
             queryset=Subscription.objects.all(),
@@ -205,7 +219,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
-        exclude = ('id',)
+        fields = '__all__'
         model = ShoppingCart
         lookup_field = 'id'
         validators = [UniqueTogetherValidator(
@@ -221,7 +235,7 @@ class SubscribeSerializer(UserSerializer):
 
     class Meta:
         fields = (
-            'username', 'email', 'first_name', 'last_name',
+            'id', 'username', 'email', 'first_name', 'last_name',
             'recipes', 'recipes_count', 'is_subscribed'
         )
         model = User

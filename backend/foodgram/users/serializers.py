@@ -28,11 +28,23 @@ class UserSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('password', )
+        fields = ('password', 'id', 'username', 'email', 'first_name',
+                  'last_name')
 
-    def validate_current_password(self, request, value):
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        email = validated_data.pop('email')
+        user = User.objects.create_user(
+            email=email, password=password, **validated_data
+        )
+        return user
+
+    def validate_current_password(self, request):
         user = request.user or self.user
+        value = request.data.get('current_password')
         assert user is not None
+        if value is None:
+            raise serializers.ValidationError('укажите пароль пользователя')
         if user.password == value:
             return value
         else:
