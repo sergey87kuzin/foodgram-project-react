@@ -6,11 +6,12 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
+
 from users.models import User
 from users.serializers import UserSerializer
-
-from .models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
-                     Subscription, Tag)
+from .models import (
+    Amount, Favorite, Ingredient, Recipe, ShoppingCart, Subscription, Tag
+)
 
 
 class TagSerializer(serializers.ModelSerializer):
