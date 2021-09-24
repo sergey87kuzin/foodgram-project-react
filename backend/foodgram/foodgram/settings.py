@@ -11,7 +11,7 @@ AUTH_USER_MODEL = 'users.User'
 
 SECRET_KEY = 'x&lbq2u()iluevol*1&i(hnq4y-i#-+^)7h!ufe@i1+8woyssd'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -65,10 +65,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # }
     'default': {
         'ENGINE': env('ENGINE', default='django.db.backends.postgresql'),
         'NAME': env('DB_NAME'),
