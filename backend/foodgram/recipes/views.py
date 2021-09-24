@@ -11,7 +11,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 
-from .filters import RecipeFilter
+from .filters import IngredientFilter, RecipeFilter
 from .models import Amount, Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .paginators import RecipePagination
 from .permissions import IsAuthorPermission
@@ -78,8 +78,10 @@ class TagViewSet(CustomViewSet):
 
 class IngredientViewSet(CustomViewSet):
     queryset = Ingredient.objects.all()
-    pagination_class = PageNumberPagination
     permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = PageNumberPagination
+    filterset_class = IngredientFilter
+    filterset_fields = ['name']
     lookup_field = 'id'
     serializer_class = IngredientSerializer
 

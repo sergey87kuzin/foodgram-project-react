@@ -24,5 +24,5 @@ def validate_subscribe(user, author):
     author_id = author.id
     if user_id == author_id:
         raise ValidationError(
-               'вы не можете подписаться на себя'
+            'вы не можете подписаться на себя'
         )

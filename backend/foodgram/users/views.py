@@ -58,8 +58,8 @@ class UserViewSet(mixins.CreateModelMixin,
             serializer.validate_new_password(request, new_password)
         except ValidationError:
             return Response('новый пароль некорректен')
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        instance.set_password(new_password)
+        instance.save()
         return Response(HTTPStatus.OK)
 
     @action(detail=False, methods=['get'],

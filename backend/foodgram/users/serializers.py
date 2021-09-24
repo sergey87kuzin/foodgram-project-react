@@ -45,7 +45,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         assert user is not None
         if value is None:
             raise serializers.ValidationError('укажите пароль пользователя')
-        if user.password == value:
+        if user.check_password(value):
             return value
         else:
             raise serializers.ValidationError('неверный пароль пользователя')

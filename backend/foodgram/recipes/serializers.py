@@ -1,4 +1,5 @@
 import base64
+import uuid
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -57,10 +58,11 @@ class AmountSerializer(serializers.ModelSerializer):
 class MyImageField(serializers.ImageField):
     def to_internal_value(self, data):
         format, imgstr = data.split(';base64,')
+        file_name = str(uuid.uuid4())[:12]
         ext = format.split('/')[-1]
         data = ContentFile(
             base64.b64decode(imgstr),
-            name='file_name.' + ext
+            name=file_name + '.' + ext
         )
         django_field = self._DjangoImageField()
         django_field.error_messages = self.error_messages
@@ -163,6 +165,7 @@ class RecipeCreateSerializer(BaseRecipeSerializer):
         ingredients = self.context['request'].data['ingredients']
         for ingr in ingredients:
             RecipeSerializer.create_amount(instance, ingr)
+        instance.save()
         return instance
 
 
