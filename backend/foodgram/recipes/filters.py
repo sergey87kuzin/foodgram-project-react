@@ -8,7 +8,9 @@ class RecipeFilter(filters.FilterSet):
         choices=Tag.objects.all().values_list('slug', 'name'),
         field_name='tags__slug', label='тэги'
     )
-    author = filters.CharFilter(field_name='author__username', label='автор')
+    author = filters.CharFilter(
+        field_name='author__id', label='автор'
+    )
     is_favorited = filters.BooleanFilter(
         label='в избранных', method='check_fav'
     )
@@ -18,19 +20,15 @@ class RecipeFilter(filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ['author', 'tags', 'is_favorited', 'is_in_shopping_cart']
-
-    def check_tag(self, queryset, name, value):
-        queryset = Recipe.objects.all()
-        queryset.filter(tags__slug=value)
-        return queryset
+        fields = ['author', 'is_favorited',
+                  'is_in_shopping_cart', 'tags']
 
     def check_fav(self, queryset, name, value):
         user_id = self.request.user.id
         queryset = Recipe.objects.all()
         if value is False:
             queryset = queryset.exclude(favorites__user__id=user_id)
-        else:
+        elif value is True:
             queryset = queryset.filter(favorites__user__id=user_id)
         return queryset
 
@@ -39,7 +37,7 @@ class RecipeFilter(filters.FilterSet):
         queryset = Recipe.objects.all()
         if value is False:
             queryset = queryset.exclude(carts__user__id=user_id)
-        else:
+        elif value is True:
             queryset = queryset.filter(carts__user__id=user_id)
         return queryset
 

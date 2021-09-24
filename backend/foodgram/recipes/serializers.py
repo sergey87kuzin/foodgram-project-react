@@ -5,6 +5,7 @@ from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+# from rest_framework.response import Response
 from rest_framework.validators import UniqueTogetherValidator
 
 from users.models import User
@@ -91,7 +92,7 @@ class BaseRecipeSerializer(serializers.ModelSerializer):
 
     def create_amount(instance, ingr):
         ingredient = get_object_or_404(Ingredient, id=ingr['id'])
-        amount = ingr['amount']
+        amount = float(ingr['amount'])
         Amount.objects.create(
             recipe=instance, ingredient=ingredient, amount=amount
         )
@@ -127,7 +128,7 @@ class RecipeSerializer(BaseRecipeSerializer):
 
 class RecipeCreateSerializer(BaseRecipeSerializer):
     ingredients = AmountCreateSerializer(
-        many=True, required=True
+        many=True, required=True,
     )
 
     class Meta:
@@ -137,6 +138,23 @@ class RecipeCreateSerializer(BaseRecipeSerializer):
             'is_favorited', 'is_in_shopping_cart', 'text',
             'cooking_time'
         )
+
+    def validate(self, data):
+        ingredients = self.context['request'].data['ingredients']
+        ingr_list = []
+        for ingr in ingredients:
+            ingredient = get_object_or_404(Ingredient, id=ingr['id'])
+            if ingredient not in ingr_list:
+                ingr_list.append(ingredient)
+            else:
+                raise serializers.ValidationError(
+                    f'вы несколько раз используете {ingredient.name}'
+                )
+            if float(ingr['amount']) < 0:
+                raise serializers.ValidationError(
+                    f'вы ввели отрицательное количество {ingredient.name}'
+                )
+        return data
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
@@ -153,14 +171,13 @@ class RecipeCreateSerializer(BaseRecipeSerializer):
     def update(self, instance, validated_data):
         tags = self.context['request'].data['tags']
         instance.tags.set(tags)
-        new_name = validated_data.get('name')
-        instance.name = new_name
-        new_text = validated_data.get('text')
-        instance.text = new_text
-        new_image = validated_data.get('image')
-        instance.image = new_image
-        time = str(validated_data.get('cooking_time'))
-        instance.cooking_time = time
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time',
+            instance.cooking_time
+        )
+        instance.image = validated_data.get('image', instance.image)
         for ingr in instance.quantities.all():
             ingr.delete()
         ingredients = self.context['request'].data['ingredients']
