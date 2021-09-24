@@ -6,20 +6,18 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import (
-    IsAuthenticated, IsAuthenticatedOrReadOnly,
-)
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
 from .models import Amount, Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .paginators import RecipePagination
 from .permissions import IsAuthorPermission
-from .serializers import (
-    FavoriteSerializer, IngredientSerializer,
-    RecipeCreateSerializer, RecipeSerializer, ShoppingCartSerializer,
-    ShortRecipeSerializer, TagSerializer
-)
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeCreateSerializer, RecipeSerializer,
+                          ShoppingCartSerializer, ShortRecipeSerializer,
+                          TagSerializer)
 from .viewsets import CustomViewSet
 
 

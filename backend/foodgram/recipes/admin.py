@@ -1,11 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
-
 from users.models import User
+
 from .forms import AmountChangeForm, AmountCreationForm
-from .models import (
-    Amount, Favorite, Ingredient, Recipe, ShoppingCart, Subscription, Tag,
-)
+from .models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
+                     Subscription, Tag)
 
 
 class UserAdmin(admin.ModelAdmin):

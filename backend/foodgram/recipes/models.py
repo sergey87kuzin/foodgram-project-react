@@ -1,7 +1,7 @@
 from colorfield.fields import ColorField
 from django.db import models
-
 from users.models import User
+
 from .validators import validator_amount, validator_time
 
 
