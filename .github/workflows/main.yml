@@ -40,7 +40,7 @@ jobs:
         with:
           with:
           push: true
-          context: backend
+          context: backend/foodgram
           tags: ${{ secrets.DOCKER_USERNAME }}/final:latest
   
   deploy:
