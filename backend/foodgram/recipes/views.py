@@ -31,7 +31,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     filterset_class = RecipeFilter
     filterset_fields = [
-        'author', 'tags', 'is_favorited', 'is_in_shopping_cart'
+        'page', 'author', 'tags', 'is_favorited', 'is_in_shopping_cart'
     ]
     search_fields = ['^name']
 
