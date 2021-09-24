@@ -10,7 +10,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from users.models import User
 from users.serializers import UserSerializer
 from .models import (
-    Amount, Favorite, Ingredient, Recipe, ShoppingCart, Subscription, Tag
+    Amount, Favorite, Ingredient, Recipe, ShoppingCart, Subscription, Tag,
 )
 
 

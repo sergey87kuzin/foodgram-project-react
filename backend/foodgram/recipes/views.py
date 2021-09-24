@@ -7,7 +7,7 @@ from rest_framework import filters, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
-    IsAuthenticated, IsAuthenticatedOrReadOnly
+    IsAuthenticated, IsAuthenticatedOrReadOnly,
 )
 from rest_framework.response import Response
 
@@ -18,7 +18,7 @@ from .permissions import IsAuthorPermission
 from .serializers import (
     FavoriteSerializer, IngredientSerializer, RecipeCreateSerializer,
     RecipeSerializer, ShoppingCartSerializer, ShortRecipeSerializer,
-    TagSerializer
+    TagSerializer,
 )
 from .viewsets import CustomViewSet
 
