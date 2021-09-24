@@ -11,7 +11,7 @@ AUTH_USER_MODEL = 'users.User'
 
 SECRET_KEY = 'x&lbq2u()iluevol*1&i(hnq4y-i#-+^)7h!ufe@i1+8woyssd'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
